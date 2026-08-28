@@ -57,7 +57,7 @@ The JS scheduler:
 
 1. Starts only after the 3s intro, and only if
    `prefers-reduced-motion: reduce` is not set.
-2. Waits a random 3–9s, then runs a flicker of total duration 0.1–0.8s split
+2. Waits a random 3–9s, then runs a flicker of total duration 0.3–2.0s split
    into 1–4 segments with random-weighted, uneven durations.
 3. Segments alternate frames (no consecutive repeats; a single-segment flicker
    is always the suit).
@@ -92,7 +92,7 @@ JS (in `<script>`):
 
 - Intro delay: `3000` ms
 - Flicker cadence: `rand(3000, 9000)` ms between flickers
-- Flicker length: `rand(100, 800)` ms total, `1 + floor(random()*4)` segments
+- Flicker length: `rand(300, 2000)` ms total, `1 + floor(random()*4)` segments
 - Segment weight range: `rand(0.5, 1.5)`
 
 ## Deployment
