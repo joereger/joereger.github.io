@@ -13,6 +13,11 @@ HTML/CSS/JS, served by GitHub Pages.
 | `JoeReger-LowPoly-Black-T-shirt-v02.png` | Base avatar frame (always visible) |
 | `JoeReger-LowPoly.png` | Suit avatar frame (shown only during flickers) |
 | `x.svg`, `linkedin.svg`, `instagram.svg` | Social icons (16px row) |
+| `favicon.ico` | Multi-size classic favicon (browser tabs, legacy) |
+| `favicon-16x16.png`, `favicon-32x32.png` | PNG favicons for modern browsers |
+| `apple-touch-icon.png` | 180x180 iOS home-screen icon |
+| `android-chrome-192x192.png`, `android-chrome-512x512.png` | Android / PWA install icons, referenced by the manifest |
+| `site.webmanifest` | Web app manifest (name, icons, `#0d0d0d` theme/background, standalone display) |
 | `.gitignore` | Ignores local cruft |
 
 ## How it works
@@ -60,6 +65,15 @@ The JS scheduler:
    segment randomly applies ±2px horizontal jitter (`jitter-l` / `jitter-r`)
    or none.
 5. Ends back on the base frame and schedules the next flicker.
+
+### Favicons & manifest
+
+`<head>` links the full icon set with root-absolute paths (`/favicon.ico`,
+the 16/32px PNGs, `/apple-touch-icon.png`) plus `/site.webmanifest` and a
+`theme-color` meta of `#0d0d0d` so mobile browser chrome matches the page
+background. To swap the icons, regenerate the files with the same names — no
+markup changes needed. Update `name` / `short_name` in `site.webmanifest` if
+the install label should change.
 
 ## Tuning knobs
 
