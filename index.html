@@ -13,21 +13,216 @@
   }
   body {
     background: #0d0d0d;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* --- Avatar: always dead-centered in the viewport --- */
+  .avatar-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    animation: float 6s ease-in-out infinite;
+  }
+  .avatar {
+    width: min(70vmin, 600px);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12),
+                0 12px 40px rgba(0, 0, 0, 0.6);
+    transition: width 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+    animation: sway 7s ease-in-out infinite;
+  }
+  body.small .avatar {
+    width: 25vmin;
+  }
+  .avatar {
+    position: relative;
+  }
+  .avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .avatar img.layer {
+    opacity: 0; /* flicker layers hidden by default; toggled by JS, no transition = hard cuts */
+  }
+  .avatar img.on {
+    opacity: 1;
+  }
+  /* 1980s broken-transmission garnish, applied per flicker segment */
+  .avatar.glitch img {
+    filter: brightness(1.15) contrast(1.1);
+  }
+  .avatar.glitch img.jitter-l { translate: -2px 0; }
+  .avatar.glitch img.jitter-r { translate: 2px 0; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+  }
+
+  /* --- Social icons --- */
+  .links {
+    position: absolute;
+    top: calc(50% + 12.5vmin + 34px); /* just below the deflated avatar */
+    left: 50%;
+    translate: -50%;
     display: flex;
+    gap: 20px;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.9s ease 0.3s, transform 0.9s ease 0.3s;
+    pointer-events: none;
   }
-  img {
-    max-width: 600px;
-    width: 100%;
-    height: auto;
+  body.small .links {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .links a {
     display: block;
+    opacity: 0.75;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .links a:hover {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  .links img {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  /* --- Tagline --- */
+  .tagline {
+    position: absolute;
+    top: calc(50% + 12.5vmin + 34px + 16px + 34px); /* same gap below icons as avatar-to-icons */
+    left: 50%;
+    translate: -50%;
+    width: 25vmin; /* matches the deflated avatar width */
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: #5a5a5a;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.9s ease 0.45s, transform 0.9s ease 0.45s;
+  }
+  body.small .tagline {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-float, .avatar {
+      animation: none;
+    }
+    .avatar, .links {
+      transition: none;
+    }
   }
 </style>
 </head>
 <body>
-  <img src="JoeReger-LowPoly-Black-T-shirt-v02.png" alt="Joe Reger">
+  <div class="avatar-float">
+    <div class="avatar" id="avatar">
+      <img src="JoeReger-LowPoly-Black-T-shirt-v02.png" alt="Joe Reger" id="frame-base">
+      <img src="JoeReger-LowPoly.png" alt="" aria-hidden="true" class="layer" id="frame-suit">
+    </div>
+  </div>
+  <nav class="links" aria-label="Social links">
+    <a href="https://x.com/joereger" target="_blank" rel="noopener"><img src="x.svg" alt="X"></a>
+    <a href="https://www.linkedin.com/in/joereger/" target="_blank" rel="noopener"><img src="linkedin.svg" alt="LinkedIn"></a>
+    <a href="https://www.instagram.com/joereger" target="_blank" rel="noopener"><img src="instagram.svg" alt="Instagram"></a>
+  </nav>
+  <p class="tagline">atlanta, georgia. father of three amazing humans. gatech physics. entrepreneur. techno-optimist.</p>
+  <script>
+    setTimeout(function () {
+      document.body.classList.add('small');
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        scheduleNextFlicker();
+      }
+    }, 3000);
+
+    // --- 1980s broken-transmission flicker ---
+    var avatar = document.getElementById('avatar');
+    var layers = {
+      base: null, // t-shirt is the always-visible base layer
+      suit: document.getElementById('frame-suit')
+    };
+    var FRAMES = ['base', 'suit'];
+
+    function rand(min, max) { return min + Math.random() * (max - min); }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function showFrame(name) {
+      layers.suit.classList.toggle('on', name === 'suit');
+    }
+
+    function scheduleNextFlicker() {
+      setTimeout(runFlicker, rand(3000, 9000));
+    }
+
+    function runFlicker() {
+      var total = rand(100, 800);           // total flicker duration, ms
+      var count = 1 + Math.floor(Math.random() * 4); // 1-4 segments
+
+      // Build segment frames: no consecutive repeats; a single segment must not be base.
+      var frames = [];
+      var prev = 'base'; // starting state is the base image
+      for (var i = 0; i < count; i++) {
+        var options = FRAMES.filter(function (f) { return f !== prev; });
+        if (count === 1) options = ['suit'];
+        var f = pick(options);
+        frames.push(f);
+        prev = f;
+      }
+
+      // Uneven, organic segment durations: random weights normalized to total.
+      var weights = frames.map(function () { return rand(0.5, 1.5); });
+      var wsum = weights.reduce(function (a, b) { return a + b; }, 0);
+      var durations = weights.map(function (w) { return (w / wsum) * total; });
+
+      avatar.classList.add('glitch');
+      var t = 0;
+      frames.forEach(function (frame, i) {
+        setTimeout(function () {
+          showFrame(frame);
+          // random horizontal tracking-error jitter per segment
+          var jitter = pick(['jitter-l', 'jitter-r', '']);
+          [layers.suit, document.getElementById('frame-base')].forEach(function (el) {
+            el.classList.remove('jitter-l', 'jitter-r');
+            if (jitter) el.classList.add(jitter);
+          });
+        }, t);
+        t += durations[i];
+      });
+
+      // End: back to base, garnish off, schedule the next one.
+      setTimeout(function () {
+        showFrame('base');
+        avatar.classList.remove('glitch');
+        [layers.suit, document.getElementById('frame-base')].forEach(function (el) {
+          el.classList.remove('jitter-l', 'jitter-r');
+        });
+        scheduleNextFlicker();
+      }, total);
+    }
+  </script>
 </body>
 </html>
